@@ -1,25 +1,26 @@
 #ifndef PENDULUM_H
 #define PENDULUM_H
 
+// Класс маятника - хранит все физические параметры и состояние
 class Pendulum
 {
 public:
-    double L;
-    double m;
+    double L; // длина маятника (м)
+    double m; // масса груза (кг)
 
-    double x;
-    double y;
+    double x; // координата x (м)
+    double y; // координата y (м)
 
-    double vx;
-    double vy;
+    double vx; // скорость по x (м/с)
+    double vy; // скорость по y (м/с)
 
     Pendulum();
 
-    void setState(double x, double y,
-                  double vx, double vy);
+    // Установить состояние маятника
+    void setState(double x, double y, double vx, double vy);
 
-    void getState(double &x, double &y,
-                  double &vx, double &vy) const;
+    // Получить текущее состояние
+    void getState(double &x, double &y, double &vx, double &vy) const;
 };
 
 #endif
