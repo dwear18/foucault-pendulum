@@ -9,12 +9,13 @@
 // Одно поле ввода параметра
 struct Field
 {
-    std::string label; // подпись поля
-    std::string unit;  // единица измерения
-    std::string value; // текущее значение (строка)
+    std::string label;        // подпись поля
+    std::string unit;         // единица измерения
+    std::string value;        // текущее значение (строка)
+    std::string defaultValue; // значение по умолчанию
     double minVal;
     double maxVal;
-    bool error = false; // есть ли ошибка?
+    bool error = false;
     std::string errorMsg;
 };
 
@@ -27,7 +28,7 @@ public:
 
     // --- Методы по UML ---
 
-    // Получить ввод пользователя (открыть/закрыть панель параметров)
+    // Получить ввод (рисует панель если открыта)
     void getInput(class Renderer &renderer,
                   sf::RenderWindow &window,
                   Simulation &sim);
@@ -35,7 +36,7 @@ public:
     // Запустить симуляцию
     void handleStart(Simulation &sim);
 
-    // Остановить симуляцию
+    // Остановить/сбросить симуляцию
     void handleStop(Simulation &sim);
 
     // Сменить широту
@@ -46,15 +47,18 @@ public:
     void handleKey(sf::Keyboard::Key key, Simulation &sim, bool &paused);
     bool handleClick(sf::Vector2f pos, Simulation &sim);
 
-    // --- Панель параметров ---
+    // --- Состояние панели ---
     bool panelOpen = false;
     bool applyNow = false; // флаг: применить параметры
 
-    // Синхронизировать поля с текущими параметрами симуляции
+    // Синхронизировать поля из симуляции
     void syncFrom(const Simulation &sim);
 
-    // Применить поля к симуляции (возвращает false при ошибках)
+    // Применить поля к симуляции (с валидацией)
     bool applyTo(Simulation &sim);
+
+    // Сбросить все поля к значениям по умолчанию
+    void resetToDefaults();
 
     // Нарисовать панель параметров
     void draw(sf::RenderWindow &window, class Renderer &renderer,
@@ -62,11 +66,12 @@ public:
 
 private:
     std::vector<Field> fields; // поля ввода
+    int focusedField = -1;     // активное поле
 
-    int focusedField = -1; // индекс активного поля
-
-    sf::FloatRect applyBtn; // кнопка "Применить"
-    sf::FloatRect closeBtn; // кнопка "Закрыть"
+    // Прямоугольники кнопок (для обработки кликов)
+    sf::FloatRect applyBtn;
+    sf::FloatRect closeBtn;
+    sf::FloatRect resetBtn;
 
     void drawField(sf::RenderWindow &w, class Renderer &r,
                    Field &f, float x, float y, float width, int idx);

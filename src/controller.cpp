@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <cmath>
 
-// Вспомогательная функция: нарисовать прямоугольник
+// Вспомогательные функции
 static void fillRect(sf::RenderWindow &w, float x, float y,
                      float wd, float ht, sf::Color c)
 {
@@ -14,14 +14,25 @@ static void fillRect(sf::RenderWindow &w, float x, float y,
     w.draw(r);
 }
 
-// Попробовать преобразовать строку в число
+static void drawBorder(sf::RenderWindow &w, float x, float y,
+                       float wd, float ht, sf::Color c, float t = 1.f)
+{
+    sf::RectangleShape r(sf::Vector2f(wd, ht));
+    r.setPosition(sf::Vector2f(x, y));
+    r.setFillColor(sf::Color::Transparent);
+    r.setOutlineThickness(t);
+    r.setOutlineColor(c);
+    w.draw(r);
+}
+
+// Попробовать разобрать строку как число
 static bool toDouble(const std::string &s, double &out)
 {
     try
     {
         size_t pos;
         out = std::stod(s, &pos);
-        return pos == s.size(); // вся строка должна быть числом
+        return pos == s.size();
     }
     catch (...)
     {
@@ -29,7 +40,7 @@ static bool toDouble(const std::string &s, double &out)
     }
 }
 
-// Число в строку с нужной точностью
+// Число в строку
 static std::string dtos(double v, int prec = 4)
 {
     std::ostringstream ss;
@@ -38,50 +49,40 @@ static std::string dtos(double v, int prec = 4)
 }
 
 // ============================================================
-// Конструктор - задать поля ввода (по ТЗ Приложение 1)
+// Конструктор - задать поля согласно Приложению 1 ТЗ
 // ============================================================
 Controller::Controller()
 {
+    // label, unit, value, defaultValue, min, max
     fields = {
-        {"Latitude A (phi)", "deg", "45.0000", -90, 90},
-        {"Latitude B (phi)", "deg", "60.0000", -90, 90},
-        {"Length L", "m", "2.5000", 0.01, 1000},
-        {"Mass m", "kg", "1.0000", 0.001, 1e6},
-        {"Gravity g", "m/s2", "9.8067", 0.01, 100},
-        {"x0", "m", "0.1000", -10, 10},
-        {"y0", "m", "0.0000", -10, 10},
-        {"Vx0", "m/s", "0.0000", -50, 50},
-        {"Vy0", "m/s", "0.0000", -50, 50},
-        {"dt", "s", "0.0100", 1e-4, 1.0},
-        {"T_max", "s", "200.0", 1, 1e6},
+        {"Latitude A (phi)", "deg", "45.0000", "45.0000", -90, 90},
+        {"Latitude B (phi)", "deg", "60.0000", "60.0000", -90, 90},
+        {"Length L", "m", "2.5000", "2.5000", 0.01, 1000},
+        {"Mass m", "kg", "1.0000", "1.0000", 0.001, 1e6},
+        {"Gravity g", "m/s2", "9.8067", "9.8067", 0.01, 100},
+        {"x0", "m", "0.1000", "0.1000", -10, 10},
+        {"y0", "m", "0.0000", "0.0000", -10, 10},
+        {"Vx0", "m/s", "0.0000", "0.0000", -50, 50},
+        {"Vy0", "m/s", "0.0000", "0.0000", -50, 50},
+        {"Step dt", "s", "0.0100", "0.0100", 1e-4, 1.0},
+        {"T_max", "s", "200.0", "200.0", 1, 1e6},
     };
 }
 
 // ============================================================
-// По UML: getInput - вызывается каждый кадр из main
+// По UML: getInput - вызывается каждый кадр
 // ============================================================
 void Controller::getInput(Renderer &renderer,
                           sf::RenderWindow &window,
                           Simulation &sim)
 {
-    // Отрисовка панели если открыта
     if (panelOpen)
-        draw(window, renderer, 430, 80, 530);
+        draw(window, renderer, 430, 75, 540);
 }
 
-// По UML: handleStart
-void Controller::handleStart(Simulation &sim)
-{
-    sim.start();
-}
+void Controller::handleStart(Simulation &sim) { sim.start(); }
+void Controller::handleStop(Simulation &sim) { sim.stop(); }
 
-// По UML: handleStop
-void Controller::handleStop(Simulation &sim)
-{
-    sim.stop();
-}
-
-// По UML: handleLatitudeChange
 void Controller::handleLatitudeChange(Simulation &sim, double newLat)
 {
     sim.lat1 = newLat;
@@ -89,36 +90,40 @@ void Controller::handleLatitudeChange(Simulation &sim, double newLat)
 }
 
 // ============================================================
-// Клавиатура (вызывается из main при событии KeyPressed)
+// Сброс полей к значениям по умолчанию
+// ============================================================
+void Controller::resetToDefaults()
+{
+    for (auto &f : fields)
+    {
+        f.value = f.defaultValue;
+        f.error = false;
+        f.errorMsg = "";
+    }
+}
+
+// ============================================================
+// Клавиатура
 // ============================================================
 void Controller::handleKey(sf::Keyboard::Key key,
                            Simulation &sim, bool &paused)
 {
     if (panelOpen)
     {
-        // В панели: Tab переключает поле, Enter применяет
-        if (key == sf::Keyboard::Key::Tab)
-        {
-            if (focusedField >= 0)
-            {
-                focusedField = (focusedField + 1) % (int)fields.size();
-                for (auto &f : fields)
-                    f.error = false;
-            }
-        }
+        if (key == sf::Keyboard::Key::Tab && focusedField >= 0)
+            focusedField = (focusedField + 1) % (int)fields.size();
         if (key == sf::Keyboard::Key::Enter)
             applyNow = true;
         return;
     }
 
-    // Вне панели: управление симуляцией
     switch (key)
     {
     case sf::Keyboard::Key::Space:
         paused = !paused;
         break;
     case sf::Keyboard::Key::R:
-        handleStop(sim); // сброс = stop = start
+        handleStop(sim);
         break;
     case sf::Keyboard::Key::Add:
     case sf::Keyboard::Key::Equal:
@@ -145,7 +150,7 @@ void Controller::handleKey(sf::Keyboard::Key key,
 }
 
 // ============================================================
-// Ввод символов (вызывается из main при событии TextEntered)
+// Ввод текста
 // ============================================================
 void Controller::handleTextEntered(uint32_t unicode)
 {
@@ -155,18 +160,14 @@ void Controller::handleTextEntered(uint32_t unicode)
 
     if (unicode == 8)
     {
-        // Backspace - удалить последний символ
         if (!f.value.empty())
             f.value.pop_back();
     }
     else if (unicode >= 32 && unicode < 127)
     {
         char c = (char)unicode;
-        // Разрешаем: цифры, точку, минус (только первый), e/E
         if (std::isdigit(c) || c == '.' || c == 'e' || c == 'E' || (c == '-' && f.value.empty()))
-        {
             f.value += c;
-        }
     }
     f.error = false;
 }
@@ -179,23 +180,26 @@ bool Controller::handleClick(sf::Vector2f pos, Simulation &sim)
     if (!panelOpen)
         return false;
 
-    // Кнопка "Apply"
     if (applyBtn.contains(pos))
     {
         applyNow = true;
         return true;
     }
-    // Кнопка "Close"
     if (closeBtn.contains(pos))
     {
         panelOpen = false;
         return true;
     }
-    return true; // поглощаем клик внутри панели
+    if (resetBtn.contains(pos))
+    {
+        resetToDefaults();
+        return true;
+    }
+    return true; // поглощаем все клики внутри панели
 }
 
 // ============================================================
-// Синхронизировать поля с текущими параметрами симуляции
+// Синхронизация полей с симуляцией
 // ============================================================
 void Controller::syncFrom(const Simulation &sim)
 {
@@ -213,14 +217,13 @@ void Controller::syncFrom(const Simulation &sim)
 }
 
 // ============================================================
-// Применить поля к симуляции (п. 4.2 ТЗ: валидация входных данных)
+// Применить поля (п.4.2 ТЗ: валидация входных данных)
 // ============================================================
 bool Controller::applyTo(Simulation &sim)
 {
     bool ok = true;
     double v;
 
-    // Проверить одно поле
     auto check = [&](int i) -> bool
     {
         fields[i].error = false;
@@ -236,8 +239,7 @@ bool Controller::applyTo(Simulation &sim)
         {
             fields[i].error = true;
             std::ostringstream ss;
-            ss << "[" << fields[i].minVal
-               << ".." << fields[i].maxVal << "]";
+            ss << "[" << fields[i].minVal << ".." << fields[i].maxVal << "]";
             fields[i].errorMsg = ss.str();
             ok = false;
             return false;
@@ -245,7 +247,6 @@ bool Controller::applyTo(Simulation &sim)
         return true;
     };
 
-    // Применить каждый параметр
     if (check(0))
         sim.lat1 = v;
     if (check(1))
@@ -272,11 +273,9 @@ bool Controller::applyTo(Simulation &sim)
 
     if (ok)
     {
-        // Применить гравитацию к обоим каналам
         sim.physics.setG(g);
         sim.physics2.setG(g);
     }
-
     return ok;
 }
 
@@ -289,43 +288,39 @@ void Controller::drawField(sf::RenderWindow &w, Renderer &r,
 {
     bool focused = (idx == focusedField);
 
-    // Подпись + единица
+    // Подпись
     sf::Color labelCol = f.error ? sf::Color(255, 100, 80)
-                                 : sf::Color(150, 160, 180);
-    r.drawText(w, f.label, x, y + 5, 1.5f, labelCol);
+                                 : sf::Color(180, 190, 210);
+    r.drawText(w, f.label, x, y + 3, 14, labelCol);
 
     // Поле ввода
-    float bx = x + width * 0.55f;
-    float bw = width * 0.30f;
+    float bx = x + width * 0.52f;
+    float bw = width * 0.33f;
+    float bh = 24.f;
 
     sf::Color borderCol = f.error   ? sf::Color(220, 70, 50)
-                          : focused ? sf::Color(90, 170, 255)
+                          : focused ? sf::Color(80, 160, 255)
                                     : sf::Color(55, 70, 100);
+    sf::Color bgCol = focused ? sf::Color(25, 35, 55)
+                              : sf::Color(18, 22, 36);
 
-    fillRect(w, bx, y, bw, 22, sf::Color(20, 24, 36));
-    {
-        sf::RectangleShape b(sf::Vector2f(bw, 22));
-        b.setPosition(sf::Vector2f(bx, y));
-        b.setFillColor(sf::Color::Transparent);
-        b.setOutlineThickness(1.f);
-        b.setOutlineColor(borderCol);
-        w.draw(b);
-    }
+    fillRect(w, bx, y, bw, bh, bgCol);
+    drawBorder(w, bx, y, bw, bh, borderCol);
 
     // Значение + курсор
-    std::string display = f.value + (focused ? "_" : "");
-    r.drawText(w, display, bx + 4, y + 5, 1.5f,
+    std::string display = f.value + (focused ? "|" : "");
+    r.drawText(w, display, bx + 4, y + 3, 14,
                focused ? sf::Color(200, 230, 255)
-                       : sf::Color(150, 200, 220));
+                       : sf::Color(160, 210, 230));
 
-    // Единица измерения
-    r.drawText(w, f.unit, bx + bw + 4, y + 5, 1.5f,
-               sf::Color(80, 100, 130));
+    // Единица
+    r.drawText(w, f.unit, bx + bw + 5, y + 3, 13,
+               sf::Color(90, 110, 145));
 
-    // Сообщение об ошибке
+    // Ошибка
     if (f.error)
-        r.drawText(w, "ERR: " + f.errorMsg, bx, y + 24,
-                   1.2f, sf::Color(255, 90, 70));
+        r.drawText(w, "Err: " + f.errorMsg,
+                   bx, y + bh + 1, 13, sf::Color(255, 90, 70));
 }
 
 // ============================================================
@@ -336,57 +331,61 @@ void Controller::draw(sf::RenderWindow &w, Renderer &r,
 {
     int n = (int)fields.size();
     float fieldH = 30.f;
-    float padding = 12.f;
-    float panelH = padding + 18 + n * fieldH + 40 + padding;
+    float pad = 14.f;
+    // высота панели: заголовок + поля + три кнопки + отступы
+    float panelH = pad + 22 + n * fieldH + 10 + 32 + 10 + 32 + pad;
 
-    // Фон панели (полупрозрачный)
-    fillRect(w, px, py, width, panelH, sf::Color(16, 20, 32, 245));
-    {
-        sf::RectangleShape b(sf::Vector2f(width, panelH));
-        b.setPosition(sf::Vector2f(px, py));
-        b.setFillColor(sf::Color::Transparent);
-        b.setOutlineThickness(1.5f);
-        b.setOutlineColor(sf::Color(70, 110, 200));
-        w.draw(b);
-    }
+    // --- Фон панели ---
+    fillRect(w, px, py, width, panelH, sf::Color(16, 20, 34, 248));
+    drawBorder(w, px, py, width, panelH, sf::Color(65, 105, 200), 1.5f);
 
-    float cx = px + padding;
-    float cy = py + padding;
+    float cx = px + pad;
+    float cy = py + pad;
 
-    // Заголовок
-    r.drawText(w, "SIMULATION PARAMETERS", cx, cy, 2.0f,
-               sf::Color(90, 155, 235));
-    cy += 20.f;
+    // --- Заголовок ---
+    r.drawText(w, "Simulation Parameters", cx, cy, 16,
+               sf::Color(85, 150, 235));
+    cy += 26.f;
 
-    // Поля
+    // --- Поля ---
     sf::Vector2f mouse(sf::Mouse::getPosition(w));
     for (int i = 0; i < n; i++)
     {
         float fy = cy + i * fieldH;
-        // Клик по полю - активировать его
         sf::FloatRect fr(sf::Vector2f(cx, fy),
-                         sf::Vector2f(width - 2 * padding, fieldH));
+                         sf::Vector2f(width - 2 * pad, fieldH));
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && fr.contains(mouse))
         {
             for (auto &f : fields)
                 f.error = false;
             focusedField = i;
-            fields[i].error = false;
         }
-        drawField(w, r, fields[i], cx, fy, width - 2 * padding, i);
+        drawField(w, r, fields[i], cx, fy, width - 2 * pad, i);
     }
 
-    cy += n * fieldH + 8;
+    cy += n * fieldH + 10;
 
-    // Кнопки Apply / Close
-    float btnW = (width - 2 * padding - 8) / 2.f;
+    // --- Кнопка "Reset to defaults" ---
+    resetBtn = sf::FloatRect(sf::Vector2f(cx, cy),
+                             sf::Vector2f(width - 2 * pad, 28));
+    bool rh = resetBtn.contains(mouse);
+    fillRect(w, cx, cy, width - 2 * pad, 28,
+             rh ? sf::Color(55, 80, 55) : sf::Color(38, 58, 38));
+    drawBorder(w, cx, cy, width - 2 * pad, 28, sf::Color(70, 130, 70));
+    r.drawText(w, "Reset to default values",
+               cx + 8, cy + 6, 14, sf::Color(160, 235, 160));
+    cy += 36;
+
+    // --- Кнопки Apply / Close ---
+    float btnW = (width - 2 * pad - 8) / 2.f;
 
     applyBtn = sf::FloatRect(sf::Vector2f(cx, cy),
                              sf::Vector2f(btnW, 28));
     bool ah = applyBtn.contains(mouse);
     fillRect(w, cx, cy, btnW, 28,
-             ah ? sf::Color(55, 125, 220) : sf::Color(38, 85, 175));
-    r.drawText(w, "APPLY", cx + 10, cy + 8, 1.8f,
+             ah ? sf::Color(55, 125, 225) : sf::Color(38, 90, 180));
+    drawBorder(w, cx, cy, btnW, 28, sf::Color(80, 150, 255));
+    r.drawText(w, "Apply", cx + 8, cy + 6, 14,
                sf::Color(220, 235, 255));
 
     float bx2 = cx + btnW + 8;
@@ -394,11 +393,12 @@ void Controller::draw(sf::RenderWindow &w, Renderer &r,
                              sf::Vector2f(btnW, 28));
     bool ch = closeBtn.contains(mouse);
     fillRect(w, bx2, cy, btnW, 28,
-             ch ? sf::Color(130, 45, 45) : sf::Color(88, 32, 32));
-    r.drawText(w, "CLOSE", bx2 + 10, cy + 8, 1.8f,
+             ch ? sf::Color(130, 45, 45) : sf::Color(90, 32, 32));
+    drawBorder(w, bx2, cy, btnW, 28, sf::Color(180, 70, 70));
+    r.drawText(w, "Close", bx2 + 8, cy + 6, 14,
                sf::Color(255, 175, 175));
 
     cy += 34;
-    r.drawText(w, "Tab:next  Enter:apply", cx, cy, 1.3f,
-               sf::Color(55, 75, 110));
+    r.drawText(w, "Tab: next field    Enter: apply",
+               cx, cy, 13, sf::Color(55, 75, 110));
 }
