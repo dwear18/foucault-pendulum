@@ -9,9 +9,9 @@
 // Одно поле ввода параметра
 struct Field
 {
-    std::string label;        // подпись поля
-    std::string unit;         // единица измерения
-    std::string value;        // текущее значение (строка)
+    std::string label;        // подпись
+    std::string unit;         // единица
+    std::string value;        // текущее значение
     std::string defaultValue; // значение по умолчанию
     double minVal;
     double maxVal;
@@ -19,62 +19,45 @@ struct Field
     std::string errorMsg;
 };
 
-// Контроллер - обрабатывает ввод пользователя, управляет симуляцией
-// Соответствует UML-диаграмме классов
+// Контроллер - обработка ввода и панель параметров
 class Controller
 {
 public:
     Controller();
 
-    // --- Методы по UML ---
-
-    // Получить ввод (рисует панель если открыта)
-    void getInput(class Renderer &renderer,
-                  sf::RenderWindow &window,
-                  Simulation &sim);
-
-    // Запустить симуляцию
+    // Методы по UML
+    void getInput(class Renderer &r, sf::RenderWindow &w, Simulation &sim);
     void handleStart(Simulation &sim);
-
-    // Остановить/сбросить симуляцию
     void handleStop(Simulation &sim);
+    void handleLatitudeChange(Simulation &sim, double lat);
 
-    // Сменить широту
-    void handleLatitudeChange(Simulation &sim, double newLat);
-
-    // --- Обработка событий SFML ---
+    // Обработка событий
     void handleTextEntered(uint32_t unicode);
     void handleKey(sf::Keyboard::Key key, Simulation &sim, bool &paused);
     bool handleClick(sf::Vector2f pos, Simulation &sim);
 
-    // --- Состояние панели ---
+    // Панель параметров
     bool panelOpen = false;
-    bool applyNow = false; // флаг: применить параметры
+    bool applyNow = false;
 
-    // Синхронизировать поля из симуляции
     void syncFrom(const Simulation &sim);
-
-    // Применить поля к симуляции (с валидацией)
     bool applyTo(Simulation &sim);
-
-    // Сбросить все поля к значениям по умолчанию
     void resetToDefaults();
 
-    // Нарисовать панель параметров
-    void draw(sf::RenderWindow &window, class Renderer &renderer,
-              float x, float y, float w);
+    // Рисовать панель с учётом реального размера окна
+    void draw(sf::RenderWindow &w, class Renderer &r, sf::Vector2u winSize);
 
 private:
-    std::vector<Field> fields; // поля ввода
-    int focusedField = -1;     // активное поле
+    std::vector<Field> fields;
+    int focusedField = -1;
 
-    // Прямоугольники кнопок (для обработки кликов)
     sf::FloatRect applyBtn;
     sf::FloatRect closeBtn;
     sf::FloatRect resetBtn;
 
     void drawField(sf::RenderWindow &w, class Renderer &r,
-                   Field &f, float x, float y, float width, int idx);
+                   Field &f, float x, float y, float width,
+                   float fieldH, int idx);
 };
 
 #endif
