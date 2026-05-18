@@ -93,7 +93,7 @@ void Simulation::update(double real_dt)
     }
 }
 
-// Остановить симуляцию (по UML: stop = reset)
+// Остановить симуляцию
 void Simulation::stop()
 {
     start();

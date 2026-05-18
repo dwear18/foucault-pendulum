@@ -5,10 +5,8 @@
 #include <sstream>
 #include <iomanip>
 
-// ============================================================
-// Вспомогательные функции рисования примитивов
-// ============================================================
 
+// Вспомогательные функции рисования примитивов
 static void fillRect(sf::RenderWindow &w, float x, float y,
                      float wd, float ht, sf::Color c)
 {
@@ -31,9 +29,7 @@ static void drawBorderRect(sf::RenderWindow &w, float x, float y,
     w.draw(r);
 }
 
-// ============================================================
 // Загрузка шрифта
-// ============================================================
 
 bool Renderer::loadFont(const std::string &path)
 {
@@ -47,9 +43,7 @@ bool Renderer::loadFont(const std::string &path)
     return false;
 }
 
-// ============================================================
 // Рисование текста через sf::Font
-// ============================================================
 
 void Renderer::drawText(sf::RenderWindow &w,
                         const std::string &text,
@@ -67,9 +61,8 @@ void Renderer::drawText(sf::RenderWindow &w,
     w.draw(t);
 }
 
-// ============================================================
+
 // Кнопка
-// ============================================================
 
 sf::FloatRect Renderer::drawButton(sf::RenderWindow &w,
                                    const std::string &label,
@@ -114,9 +107,7 @@ bool Renderer::isHovered(sf::RenderWindow &w, sf::FloatRect rect)
     return rect.contains(mouse);
 }
 
-// ============================================================
-// Маятник (по UML: drawPendulum)
-// ============================================================
+// Маятник
 
 void Renderer::drawPendulum(sf::RenderWindow &w,
                             const Pendulum &p,
@@ -125,7 +116,7 @@ void Renderer::drawPendulum(sf::RenderWindow &w,
     float bx = cx + (float)p.x * scale;
     float by = cy + (float)p.y * scale;
 
-    // --- Нить: толстая линия ---
+    //  Нить: толстая линия 
     {
         float dx = bx - cx, dy = by - cy;
         float len = std::sqrt(dx * dx + dy * dy);
@@ -144,11 +135,11 @@ void Renderer::drawPendulum(sf::RenderWindow &w,
         }
     }
 
-    // --- Точка крепления (крестик) ---
+    //  Точка крепления (крестик) 
     fillRect(w, cx - 5, cy - 1, 10, 2, sf::Color(160, 185, 220, 150));
     fillRect(w, cx - 1, cy - 5, 2, 10, sf::Color(160, 185, 220, 150));
 
-    // --- Вектор силы Кориолиса (п. 11 ТЗ) ---
+    //  Вектор силы Кориолиса
     float fkx = (float)p.vy * 40.f;
     float fky = -(float)p.vx * 40.f;
     float fkLen = std::sqrt(fkx * fkx + fky * fky);
@@ -172,7 +163,7 @@ void Renderer::drawPendulum(sf::RenderWindow &w,
         w.draw(head);
     }
 
-    // --- Glow ---
+    //  Glow 
     for (int i = 3; i >= 1; i--)
     {
         float r = 13.f + i * 5;
@@ -183,7 +174,7 @@ void Renderer::drawPendulum(sf::RenderWindow &w,
         w.draw(g);
     }
 
-    // --- Груз ---
+    //  Груз 
     sf::CircleShape bob(13.f);
     bob.setOrigin(sf::Vector2f(13.f, 13.f));
     bob.setPosition(sf::Vector2f(bx, by));
@@ -193,9 +184,7 @@ void Renderer::drawPendulum(sf::RenderWindow &w,
     w.draw(bob);
 }
 
-// ============================================================
-// Траектория (по UML: drawTrajectory)
-// ============================================================
+// Траектория 
 
 void Renderer::drawTrajectory(sf::RenderWindow &w,
                               const std::vector<double> &xs,
@@ -221,9 +210,7 @@ void Renderer::drawTrajectory(sf::RenderWindow &w,
     w.draw(traj);
 }
 
-// ============================================================
 // Общий метод рисования графика (внутренний)
-// ============================================================
 
 void Renderer::drawGraph(sf::RenderWindow &w,
                          const std::vector<double> &data,
@@ -324,9 +311,7 @@ void Renderer::drawGraph(sf::RenderWindow &w,
     }
 }
 
-// ============================================================
 // Три публичных метода по UML
-// ============================================================
 
 void Renderer::drawGraphXvsTime(sf::RenderWindow &w,
                                 const std::vector<double> &data,
