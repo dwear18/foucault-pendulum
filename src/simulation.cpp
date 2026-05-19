@@ -72,8 +72,6 @@ void Simulation::update(double real_dt)
 
     for (int i = 0; i < steps; i++)
     {
-        time += dt;
-
         // Шаг для маятника A (широта lat1)
         stepAndSave(pendulum, physics, solver,
                     historyX, historyY, dt);
@@ -91,6 +89,9 @@ void Simulation::update(double real_dt)
         if (historyAlpha.size() > MAX_PTS)
             historyAlpha.erase(historyAlpha.begin());
     }
+
+    // Добавить реальное прошедшее время (независимо от количества шагов)
+    time += real_dt;
 }
 
 // Остановить симуляцию
