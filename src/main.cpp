@@ -316,7 +316,6 @@ int main()
 
                 if (btnReset.contains(pos))
                 {
-                    // По UML: Controller.handleStop (сброс = остановить и заново)
                     controller.handleStop(sim);
                     paused = false;
                 }
@@ -358,7 +357,6 @@ int main()
         }
 
         // Шаг 2: обновить симуляцию
-        // По UML: Simulation.update вызывается каждый кадр
         if (!paused)
         {
             double dt = clock.restart().asSeconds();

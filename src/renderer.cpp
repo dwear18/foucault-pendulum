@@ -311,7 +311,6 @@ void Renderer::drawGraph(sf::RenderWindow &w,
     }
 }
 
-// Три публичных метода по UML
 
 void Renderer::drawGraphXvsTime(sf::RenderWindow &w,
                                 const std::vector<double> &data,

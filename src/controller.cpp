@@ -349,7 +349,7 @@ void Controller::drawField(sf::RenderWindow &w, Renderer &r,
     unsigned int fs = (unsigned int)std::max(11.f,
                                              std::min(15.f, fieldH * 0.48f));
 
-    // --- Подпись ---
+    //  Подпись 
     sf::Color labelColor = f.error
                                ? sf::Color(255, 100, 80)   // красный при ошибке
                                : sf::Color(185, 195, 215); // обычный серо-голубой
@@ -357,7 +357,7 @@ void Controller::drawField(sf::RenderWindow &w, Renderer &r,
     r.drawText(w, f.label, x, y + (inputH - (float)fs) / 2.f,
                fs, labelColor);
 
-    // --- Поле ввода ---
+    //  Поле ввода 
     sf::Color borderColor = f.error   ? sf::Color(220, 70, 50)  // красный
                             : focused ? sf::Color(80, 160, 255) // синий
                                       : sf::Color(55, 70, 100); // обычный
@@ -374,13 +374,13 @@ void Controller::drawField(sf::RenderWindow &w, Renderer &r,
     r.drawText(w, display, inputX + 5,
                y + (inputH - (float)fs) / 2.f, fs, textColor);
 
-    // --- Единица измерения ---
+    //  Единица измерения 
     r.drawText(w, f.unit, unitX,
                y + (inputH - (float)fs) / 2.f,
                (unsigned int)(fs - 1),
                sf::Color(90, 110, 145));
 
-    // --- Сообщение об ошибке (если есть) ---
+    //  Сообщение об ошибке (если есть) 
     if (f.error)
     {
         r.drawText(w, "Err: " + f.errorMsg,
@@ -419,21 +419,21 @@ void Controller::draw(sf::RenderWindow &w, Renderer &r,
     // Вертикально центрируем панель в окне
     float py = (WH - panelH) / 2.f;
 
-    // --- Фон панели ---
+    //  Фон панели 
     fillRect(w, px, py, panelW, panelH, sf::Color(16, 20, 34, 248));
     strokeRect(w, px, py, panelW, panelH, sf::Color(65, 105, 200), 1.5f);
 
     float cx = px + pad; // x начала контента
     float cy = py + pad; // y начала контента
 
-    // --- Заголовок ---
+    //  Заголовок 
     unsigned int titleFs = (unsigned int)std::max(14.f,
                                                   std::min(18.f, panelW * 0.032f));
     r.drawText(w, "Simulation Parameters", cx, cy,
                titleFs, sf::Color(85, 150, 235));
     cy += titleH;
 
-    // --- Поля ввода ---
+    //  Поля ввода 
     float fieldW = panelW - 2.f * pad;
 
     // Получаем позицию мыши в логических координатах
@@ -459,7 +459,7 @@ void Controller::draw(sf::RenderWindow &w, Renderer &r,
 
     cy += n * fieldH + 10;
 
-    // --- Кнопка "Reset to default values" ---
+    //  Кнопка "Reset to default values" 
     resetBtn = sf::FloatRect(sf::Vector2f(cx, cy),
                              sf::Vector2f(fieldW, btnH));
     bool hovReset = resetBtn.contains(mouse);
