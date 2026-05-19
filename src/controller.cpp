@@ -145,8 +145,8 @@ void Controller::handleKey(sf::Keyboard::Key key,
 
     case sf::Keyboard::Key::Add:
     case sf::Keyboard::Key::Equal:
-        // + = ускорить симуляцию (не более чем в 20 раз)
-        sim.timeScale = std::min(20.0, sim.timeScale * 1.25);
+        // + = ускорить симуляцию
+        sim.timeScale = sim.timeScale * 1.25;
         break;
 
     case sf::Keyboard::Key::Subtract:

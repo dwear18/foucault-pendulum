@@ -324,7 +324,7 @@ int main()
                     sim.timeScale = std::max(0.1, sim.timeScale / 1.25);
 
                 if (btnSpeedUp.contains(pos))
-                    sim.timeScale = std::min(20.0, sim.timeScale * 1.25);
+                    sim.timeScale = sim.timeScale * 1.25;
 
                 // Кнопка [P] Params в правом углу шапки
                 Layout Lc = calcLayout(window.getSize());
@@ -406,7 +406,15 @@ int main()
         Block blocks[] = {
             {"Speed", fmt(sim.timeScale) + "x",
              sf::Color(215, 205, 72)},
-            {"Time", fmt(sim.time) + " s",
+            {"Time", [](double t) {
+                int h = (int)t / 3600;
+                int m = ((int)t % 3600) / 60;
+                int s = (int)t % 60;
+                std::ostringstream ss;
+                ss << std::setfill('0') << std::setw(2) << h << ":"
+                   << std::setw(2) << m << ":" << std::setw(2) << s;
+                return ss.str();
+            }(sim.time),
              sf::Color(128, 198, 255)},
             {"Lat.A", fmt(sim.lat1) + "d",
              sf::Color(78, 218, 108)},
