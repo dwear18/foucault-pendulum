@@ -13,10 +13,12 @@ struct Field
     std::string unit;         // единица
     std::string value;        // текущее значение
     std::string defaultValue; // значение по умолчанию
+    std::string savedValue;   // сохранённое значение при наведении
     double minVal;
     double maxVal;
     bool error = false;
     std::string errorMsg;
+    bool wasHovered = false;  // был ли раньше с наведением
 };
 
 // Контроллер - обработка ввода и панель параметров
@@ -50,6 +52,7 @@ public:
 private:
     std::vector<Field> fields;
     int focusedField = -1;
+    int hoveredField = -1;   // поле с наведением мыши
 
     sf::FloatRect applyBtn;
     sf::FloatRect closeBtn;

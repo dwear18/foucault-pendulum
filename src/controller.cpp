@@ -85,20 +85,26 @@ static double decreaseSpeed(double current)
 // Конструктор — задаём список полей ввода.
 Controller::Controller()
 {
-    // Формат: { название, единица, значение, умолч., мин, макс }
+    // Формат: { label, unit, value, defaultValue, savedValue, minVal, maxVal, error, errorMsg, wasHovered }
     fields = {
-        {"Latitude A", "deg", "45.0000", "45.0000", -90, 90},
-        {"Latitude B", "deg", "60.0000", "60.0000", -90, 90},
-        {"Length L", "m", "2.5000", "2.5000", 0.01, 1000},
-        {"Mass m", "kg", "1.0000", "1.0000", 0.001, 1e6},
-        {"Gravity g", "m/s2", "9.8067", "9.8067", 0.01, 100},
-        {"x0", "m", "0.1000", "0.1000", -10, 10},
-        {"y0", "m", "0.0000", "0.0000", -10, 10},
-        {"Vx0", "m/s", "0.0000", "0.0000", -50, 50},
-        {"Vy0", "m/s", "0.0000", "0.0000", -50, 50},
-        {"Step dt", "s", "0.0100", "0.0100", 1e-4, 1.0},
-        {"T_max", "s", "200.0", "200.0", 1, 1e6},
+        {"Latitude A", "deg", "45.0000", "45.0000", "", -90, 90, false, "", false},
+        {"Latitude B", "deg", "60.0000", "60.0000", "", -90, 90, false, "", false},
+        {"Length L", "m", "2.5000", "2.5000", "", 0.01, 1000, false, "", false},
+        {"Mass m", "kg", "1.0000", "1.0000", "", 0.001, 1e6, false, "", false},
+        {"Gravity g", "m/s2", "9.8067", "9.8067", "", 0.01, 100, false, "", false},
+        {"x0", "m", "0.1000", "0.1000", "", -10, 10, false, "", false},
+        {"y0", "m", "0.0000", "0.0000", "", -10, 10, false, "", false},
+        {"Vx0", "m/s", "0.0000", "0.0000", "", -50, 50, false, "", false},
+        {"Vy0", "m/s", "0.0000", "0.0000", "", -50, 50, false, "", false},
+        {"Step dt", "s", "0.0100", "0.0100", "", 1e-4, 1.0, false, "", false},
+        {"T_max", "s", "200.0", "200.0", "", 1, 1e6, false, "", false},
     };
+    
+    // Инициализируем savedValue для всех полей
+    for (auto &f : fields)
+    {
+        f.savedValue = f.value;
+    }
 }
 
 // getInput — вызывается каждый кадр из main.
@@ -136,7 +142,9 @@ void Controller::resetToDefaults()
         f.value = f.defaultValue;
         f.error = false;
         f.errorMsg = "";
+        f.wasHovered = false;
     }
+    hoveredField = -1;
 }
 
 // Обработка нажатий клавиш
@@ -146,6 +154,21 @@ void Controller::handleKey(sf::Keyboard::Key key,
     // Если панель параметров открыта — перехватываем только Tab и Enter
     if (panelOpen)
     {
+        if (key == sf::Keyboard::Key::Escape)
+        {
+            // Escape = закрыть панель и восстановить значения
+            for (auto &f : fields)
+            {
+                if (f.wasHovered && f.value.empty())
+                {
+                    f.value = f.savedValue;
+                }
+                f.wasHovered = false;
+            }
+            hoveredField = -1;
+            panelOpen = false;
+            return;
+        }
         if (key == sf::Keyboard::Key::Tab && focusedField >= 0)
         {
             // Переключить на следующее поле по кругу
@@ -252,11 +275,31 @@ bool Controller::handleClick(sf::Vector2f pos, Simulation &sim)
     // Проверяем попадание в кнопки
     if (applyBtn.contains(pos))
     {
+        // Восстанавливаем значения для пустых наведённых полей
+        for (auto &f : fields)
+        {
+            if (f.wasHovered && f.value.empty())
+            {
+                f.value = f.savedValue;
+            }
+            f.wasHovered = false;
+        }
+        hoveredField = -1;
         applyNow = true; // запросить применение параметров
         return true;
     }
     if (closeBtn.contains(pos))
     {
+        // Восстанавливаем значения для наведённых полей
+        for (auto &f : fields)
+        {
+            if (f.wasHovered && f.value.empty())
+            {
+                f.value = f.savedValue;
+            }
+            f.wasHovered = false;
+        }
+        hoveredField = -1;
         panelOpen = false; // закрыть панель
         return true;
     }
@@ -284,6 +327,14 @@ void Controller::syncFrom(const Simulation &sim)
     fields[8].value = dtos(sim.vy0);        // начальная скорость Vy
     fields[9].value = dtos(sim.dt, 4);      // шаг интегрирования
     fields[10].value = dtos(sim.T_max, 1);  // максимальное время
+    
+    // Инициализируем savedValue
+    for (auto &f : fields)
+    {
+        f.savedValue = f.value;
+        f.wasHovered = false;
+    }
+    hoveredField = -1;
 }
 
 // Применить поля к симуляции.
@@ -393,28 +444,32 @@ void Controller::drawField(sf::RenderWindow &w, Renderer &r,
     fillRect(w, inputX, y, inputW, inputH, sf::Color(18, 22, 36));
     strokeRect(w, inputX, y, inputW, inputH, borderColor);
 
-    // Значение + мигающий курсор "|" для активного поля
-    std::string display = f.value + (focused ? "|" : "");
-    sf::Color textColor = focused
-                              ? sf::Color(200, 230, 255) // ярче когда активно
-                              : sf::Color(160, 210, 230);
+    //  Значение или ошибка в поле ввода
+    if (f.error)
+    {
+        // Выводим ошибку внутри поля вместо значения
+        r.drawText(w, "Err: " + f.errorMsg,
+                   inputX + 5,
+                   y + (inputH - (float)fs) / 2.f,
+                   fs, sf::Color(255, 90, 70));
+    }
+    else
+    {
+        // Значение + мигающий курсор "|" для активного поля
+        std::string display = f.value + (focused ? "|" : "");
+        sf::Color textColor = focused
+                                  ? sf::Color(200, 230, 255) // ярче когда активно
+                                  : sf::Color(160, 210, 230);
 
-    r.drawText(w, display, inputX + 5,
-               y + (inputH - (float)fs) / 2.f, fs, textColor);
+        r.drawText(w, display, inputX + 5,
+                   y + (inputH - (float)fs) / 2.f, fs, textColor);
+    }
 
     //  Единица измерения 
     r.drawText(w, f.unit, unitX,
                y + (inputH - (float)fs) / 2.f,
                (unsigned int)(fs - 1),
                sf::Color(90, 110, 145));
-
-    //  Сообщение об ошибке (если есть) 
-    if (f.error)
-    {
-        r.drawText(w, "Err: " + f.errorMsg,
-                   inputX, y + inputH + 1,
-                   11, sf::Color(255, 90, 70));
-    }
 }
 
 // Нарисовать всю панель параметров.
@@ -442,6 +497,7 @@ void Controller::draw(sf::RenderWindow &w, Renderer &r,
                    + n * fieldH // поля
                    + 10 + btnH  // кнопка Reset
                    + 10 + btnH  // кнопки Apply/Close
+                   + 6 + 16    // подсказка + отступ
                    + pad;
 
     // Вертикально центрируем панель в окне
@@ -466,6 +522,47 @@ void Controller::draw(sf::RenderWindow &w, Renderer &r,
 
     // Получаем позицию мыши в логических координатах
     sf::Vector2f mouse = w.mapPixelToCoords(sf::Mouse::getPosition(w));
+
+    // Сначала проверяем наведение на каждое поле
+    int newHoveredField = -1;
+    for (int i = 0; i < n; i++)
+    {
+        float fy = cy + i * fieldH;
+        sf::FloatRect fieldRect(sf::Vector2f(cx, fy),
+                                sf::Vector2f(fieldW, fieldH));
+        
+        if (fieldRect.contains(mouse))
+        {
+            newHoveredField = i;
+            break;
+        }
+    }
+
+    // Если наведение изменилось
+    if (newHoveredField != hoveredField)
+    {
+        // Восстанавливаем значение для поля, которое перестало быть наведено
+        if (hoveredField >= 0 && hoveredField < (int)fields.size())
+        {
+            if (fields[hoveredField].value.empty())
+            {
+                // Если пользователь не вводил ничего (поле пусто), восстанавливаем
+                fields[hoveredField].value = fields[hoveredField].savedValue;
+            }
+            fields[hoveredField].wasHovered = false;
+        }
+
+        // Сохраняем и очищаем значение для нового наведённого поля
+        if (newHoveredField >= 0)
+        {
+            fields[newHoveredField].savedValue = fields[newHoveredField].value;
+            fields[newHoveredField].value = "";
+            fields[newHoveredField].wasHovered = true;
+            fields[newHoveredField].error = false;
+        }
+
+        hoveredField = newHoveredField;
+    }
 
     for (int i = 0; i < n; i++)
     {
@@ -526,7 +623,11 @@ void Controller::draw(sf::RenderWindow &w, Renderer &r,
 
     cy += btnH + 6;
 
-    // Подсказка
-    r.drawText(w, "Tab: next field    Enter: apply",
-               cx, cy, 12, sf::Color(55, 75, 110));
+    // Подсказка (только если есть место в панели)
+    float bottomLimit = py + panelH - pad;
+    if (cy + 16 < bottomLimit)
+    {
+        r.drawText(w, "Tab: next field    Enter: apply",
+                   cx, cy, 12, sf::Color(55, 75, 110));
+    }
 }
