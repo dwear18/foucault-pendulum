@@ -1,5 +1,4 @@
-#ifndef RUNGE_KUTTA_H
-#define RUNGE_KUTTA_H
+#pragma once
 
 #include "pendulum.h"
 #include "physics_engine.h"
@@ -13,5 +12,3 @@ public:
               const PhysicsEngine &engine,
               double dt);
 };
-
-#endif

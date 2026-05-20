@@ -1,5 +1,4 @@
-#ifndef CONTROLLER_H
-#define CONTROLLER_H
+#pragma once
 
 #include <SFML/Graphics.hpp>
 #include <string>
@@ -62,5 +61,3 @@ private:
                    Field &f, float x, float y, float width,
                    float fieldH, int idx);
 };
-
-#endif

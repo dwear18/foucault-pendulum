@@ -5,14 +5,12 @@
 #include <iomanip>  // std::fixed, std::setprecision
 #include <iostream> // std::cerr для ошибок
 
-// Наши классы — по UML-диаграмме
 #include "simulation.h"
 #include "renderer.h"
 #include "controller.h"
 
 // Структура Layout — хранит все координаты интерфейса.
-// Пересчитывается каждый кадр из реального размера окна.
-// Это позволяет менять размер окна и всё масштабируется.
+// Пересчитывается каждый кадр из реального размера окна, что позволяет менять размер окна и всё масштабируется.
 struct Layout
 {
     float W, H; // размер окна в пикселях
@@ -71,7 +69,6 @@ static Layout calcLayout(sf::Vector2u winSize)
 }
 
 // Вспомогательные функции рисования примитивов
-
 // Закрашенный прямоугольник
 static void box(sf::RenderWindow &w, float x, float y,
                 float wd, float ht, sf::Color fill,
@@ -246,22 +243,21 @@ static void drawPrecession(sf::RenderWindow &w, Renderer &r,
 // Главная функция — точка входа программы
 int main()
 {
-    //  1. Создать окно SFML 
+    //  Создать окно SFML 
     sf::RenderWindow window(
         sf::VideoMode(sf::Vector2u(1400u, 900u)),
         "Foucault Pendulum Simulation",
         sf::State::Windowed);
     window.setFramerateLimit(60);
 
-    //  2. Создать объекты по UML-диаграмме классов 
+    //  Создать объекты
     Simulation sim;        // ядро симуляции
     Renderer renderer;     // отрисовщик
     Controller controller; // контроллер ввода
 
-    //  3. Загрузить шрифт 
+    // Загрузить шрифт 
     // Ищем шрифт последовательно в разных местах.
     // DejaVuSans.ttf поддерживает все нужные символы.
-    // Скачать: https://dejavu-fonts.github.io/
     std::vector<std::string> fontPaths = {
         "DejaVuSans.ttf", // рядом с exe (рекомендуется)
         "font.ttf",
@@ -326,7 +322,7 @@ int main()
             if (const auto *te = ev->getIf<sf::Event::TextEntered>())
                 controller.handleTextEntered(te->unicode);
 
-            // Клавиши (по UML: Controller.handleKey)
+            // Клавиши
             if (const auto *k = ev->getIf<sf::Event::KeyPressed>())
                 controller.handleKey(k->code, sim, paused);
 
@@ -377,7 +373,6 @@ int main()
             controller.applyNow = false;
             if (controller.applyTo(sim))
             {
-                // По UML: Controller.handleStart
                 controller.handleStart(sim);
                 controller.panelOpen = false;
                 paused = false;
@@ -406,7 +401,7 @@ int main()
 
         window.clear(sf::Color(14, 16, 24));
 
-        // ШАПКА (title bar)
+        // Шапка (title bar)
         box(window, 0, 0, L.W, L.top, sf::Color(20, 23, 36));
         hline(window, 0, L.top - 1, L.W, sf::Color(40, 55, 90));
 
@@ -467,7 +462,7 @@ int main()
                           L.W - 108.f, L.top * 0.30f,
                           (unsigned)fsS, sf::Color(70, 100, 160));
 
-        // ЛЕВАЯ ПАНЕЛЬ: ТРАЕКТОРИЯ
+        // Левая панель: траектория
         float lx = L.trajX, ly = L.trajY;
         float lw = L.trajW, lh = L.trajH;
 
@@ -499,7 +494,7 @@ int main()
         // При x0=0.1м и scale=lw*1.86 → 0.1*lw*1.86 ≈ 15% ширины панели
         float scale = lw * 1.86f;
 
-        // Траектория маятника — по UML: Renderer.drawTrajectory (п.3 ТЗ)
+        // Траектория маятника
         renderer.drawTrajectory(window,
                                 sim.getTrajectoryX(),
                                 sim.getTrajectoryY(),
@@ -549,7 +544,7 @@ int main()
                            sim.getCurrentAlpha(), fsS);
         }
 
-        // КНОПКИ УПРАВЛЕНИЯ
+        // Кнопки управления
         // Четыре кнопки в ряд: Пауза | Сброс | Скорость- | Скорость+
         {
             float bx = L.trajX;
@@ -585,7 +580,7 @@ int main()
                                  sf::Color(225, 218, 130));
         }
 
-        // ПРАВАЯ ПАНЕЛЬ: ТРИ ГРАФИКА
+        // Правая панель: три графика
         // Описание каждого графика
         struct Graph
         {
@@ -658,7 +653,7 @@ int main()
             }
         }
 
-        // СТАТУС-БАР (нижняя строка)
+        // Статус-бар (нижняя строка)
         float sy = L.H - L.bot;
         box(window, 0, sy, L.W, L.bot, sf::Color(14, 17, 26));
         hline(window, 0, sy, L.W, sf::Color(32, 44, 72));

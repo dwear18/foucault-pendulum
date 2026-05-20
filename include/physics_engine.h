@@ -1,5 +1,4 @@
-#ifndef PHYSICS_ENGINE_H
-#define PHYSICS_ENGINE_H
+#pragma once
 
 #include "pendulum.h"
 
@@ -28,5 +27,3 @@ public:
     // Получить вертикальную составляющую угловой скорости Земли
     double getOmegaZ() const;
 };
-
-#endif

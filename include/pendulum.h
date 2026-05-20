@@ -1,5 +1,4 @@
-#ifndef PENDULUM_H
-#define PENDULUM_H
+#pragma once
 
 // Класс маятника - хранит все физические параметры и состояние
 class Pendulum
@@ -22,5 +21,3 @@ public:
     // Получить текущее состояние
     void getState(double &x, double &y, double &vx, double &vy) const;
 };
-
-#endif
