@@ -62,9 +62,13 @@ public:
     // Есть ли загруженный шрифт?
     bool hasFont() const { return fontLoaded; }
 
+    // Установить текущую скорость симуляции (для фильтрации графиков)
+    void setTimeScale(double scale) { currentTimeScale = scale; }
+
 private:
     sf::Font font;
     bool fontLoaded = false;
+    double currentTimeScale = 1.0; // текущая скорость симуляции
 
     // Общий метод рисования графика
     void drawGraph(sf::RenderWindow &window,

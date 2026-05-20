@@ -111,6 +111,34 @@ static std::string fmt(double v, int p = 1)
     return ss.str();
 }
 
+// Увеличить скорость с динамическим шагом (целые числа)
+// 0-10: шаг +1, 10-100: шаг +10, 100+: шаг +100
+static double increaseSpeed(double current)
+{
+    double next;
+    if (current < 10.0)
+        next = current + 1.0;
+    else if (current < 100.0)
+        next = current + 10.0;
+    else
+        next = current + 100.0;
+    return std::round(next);
+}
+
+// Уменьшить скорость с динамическим шагом (целые числа)
+// 0-10: шаг -1, 10-100: шаг -10, 100+: шаг -100
+static double decreaseSpeed(double current)
+{
+    double next;
+    if (current <= 10.0)
+        next = std::max(0.1, current - 1.0);
+    else if (current <= 100.0)
+        next = std::max(0.1, current - 10.0);
+    else
+        next = std::max(0.1, current - 100.0);
+    return std::round(next);
+}
+
 // Кнопка управления
 // Возвращает свой прямоугольник — используется для проверки клика
 static sf::FloatRect drawBtn(sf::RenderWindow &w, Renderer &r,
@@ -267,8 +295,8 @@ int main()
     //  4. Запустить симуляцию
     sim.start();
 
-    sf::Clock clock;     // таймер для вычисления dt между кадрами
-    bool paused = false; // пауза симуляции
+    sf::Clock clock;    // таймер для вычисления dt между кадрами
+    bool paused = true; // пауза симуляции
 
     // Прямоугольники кнопок — нужны для обработки кликов.
     // Заполняются при рисовании каждый кадр.
@@ -321,10 +349,10 @@ int main()
                 }
 
                 if (btnSpeedDn.contains(pos))
-                    sim.timeScale = std::max(0.1, sim.timeScale / 1.25);
+                    sim.timeScale = decreaseSpeed(sim.timeScale);
 
                 if (btnSpeedUp.contains(pos))
-                    sim.timeScale = sim.timeScale * 1.25;
+                    sim.timeScale = increaseSpeed(sim.timeScale);
 
                 // Кнопка [P] Params в правом углу шапки
                 Layout Lc = calcLayout(window.getSize());
@@ -488,11 +516,11 @@ int main()
         // Анимация маятника
         renderer.drawPendulum(window, sim.pendulum, axCx, axCy, scale);
 
-        // Текущие координаты груза — одна строка в левом нижнем углу
+        // Текущие координаты груза — одна строка ниже названия траектории
         renderer.drawText(window,
                           "x=" + fmt(sim.pendulum.x, 3) +
                               "  y=" + fmt(sim.pendulum.y, 3),
-                          lx + L.pad, ly + lh - fsS - 4,
+                          lx + L.pad, ly + fsS * 2.2f,
                           (unsigned)fsS, sf::Color(80, 130, 105, 200));
 
         // Легенда широт (только если второй канал активен)
@@ -588,6 +616,9 @@ int main()
         for (int i = 0; i < 3; i++)
         {
             float gy = L.gy0 + i * (L.gh + L.pad);
+
+            // Установить текущую скорость для фильтрации графиков
+            renderer.setTimeScale(sim.timeScale);
 
             // Фон и рамка графика
             box(window, L.gx, gy, L.gw, L.gh,

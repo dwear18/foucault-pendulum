@@ -220,6 +220,9 @@ void Renderer::drawGraph(sf::RenderWindow &w,
     if (data.size() < 2)
         return;
 
+    // Шаг пропуска точек для оптимизации (не рисуем все)
+    size_t step = std::max(size_t(1), data.size() / 500);
+
     double minV = *std::min_element(data.begin(), data.end());
     double maxV = *std::max_element(data.begin(), data.end());
     double range = (maxV == minV) ? 1.0 : (maxV - minV);
@@ -246,11 +249,11 @@ void Renderer::drawGraph(sf::RenderWindow &w,
                  sf::Color(color.r / 3, color.g / 3, color.b / 3, 160));
     }
 
-    // Заливка под кривой
+    // Заливка под кривой (с пропуском точек)
     {
         sf::VertexArray fill(sf::PrimitiveType::TriangleStrip);
         float baseY = pos.y + size.y;
-        for (size_t i = 0; i < data.size(); i++)
+        for (size_t i = 0; i < data.size(); i += step)
         {
             float xp = pos.x + (i / (float)data.size()) * size.x;
             float yp = pos.y + size.y -
@@ -266,10 +269,10 @@ void Renderer::drawGraph(sf::RenderWindow &w,
         w.draw(fill);
     }
 
-    // Линия графика
+    // Линия графика (с пропуском точек)
     {
         sf::VertexArray line(sf::PrimitiveType::LineStrip);
-        for (size_t i = 0; i < data.size(); i++)
+        for (size_t i = 0; i < data.size(); i += step)
         {
             float xp = pos.x + (i / (float)data.size()) * size.x;
             float yp = pos.y + size.y -

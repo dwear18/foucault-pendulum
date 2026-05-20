@@ -54,6 +54,34 @@ static std::string dtos(double v, int prec = 4)
     return ss.str();
 }
 
+// Увеличить скорость с динамическим шагом (целые числа)
+// 0-10: шаг +1, 10-100: шаг +10, 100+: шаг +100
+static double increaseSpeed(double current)
+{
+    double next;
+    if (current < 10.0)
+        next = current + 1.0;
+    else if (current < 100.0)
+        next = current + 10.0;
+    else
+        next = current + 100.0;
+    return std::round(next);
+}
+
+// Уменьшить скорость с динамическим шагом (целые числа)
+// 0-10: шаг -1, 10-100: шаг -10, 100+: шаг -100
+static double decreaseSpeed(double current)
+{
+    double next;
+    if (current <= 10.0)
+        next = std::max(0.1, current - 1.0);
+    else if (current <= 100.0)
+        next = std::max(0.1, current - 10.0);
+    else
+        next = std::max(0.1, current - 100.0);
+    return std::round(next);
+}
+
 // Конструктор — задаём список полей ввода.
 Controller::Controller()
 {
@@ -146,13 +174,13 @@ void Controller::handleKey(sf::Keyboard::Key key,
     case sf::Keyboard::Key::Add:
     case sf::Keyboard::Key::Equal:
         // + = ускорить симуляцию
-        sim.timeScale = sim.timeScale * 1.25;
+        sim.timeScale = increaseSpeed(sim.timeScale);
         break;
 
     case sf::Keyboard::Key::Subtract:
     case sf::Keyboard::Key::Hyphen:
         // - = замедлить (не менее 0.1x)
-        sim.timeScale = std::max(0.1, sim.timeScale / 1.25);
+        sim.timeScale = decreaseSpeed(sim.timeScale);
         break;
 
     case sf::Keyboard::Key::Num1:
