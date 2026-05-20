@@ -65,7 +65,7 @@ static double increaseSpeed(double current)
         next = current + 10.0;
     else
         next = current + 100.0;
-    return std::round(next);
+    return std::round(std::min(1000.0, next));
 }
 
 // Уменьшить скорость с динамическим шагом (целые числа)
