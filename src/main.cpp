@@ -537,12 +537,12 @@ int main()
             float legY = ly + lh - fsS * 3.2f;
             box(window, legX, legY + fsS * 0.5f, 10, 3,
                 sf::Color(46, 212, 142));
-            renderer.drawText(window, fmt(sim.lat1, 0) + "d",
+            renderer.drawText(window, fmt(sim.lat1, 1) + "d",
                               legX + 13, legY,
                               (unsigned)fsS, sf::Color(46, 212, 142));
             box(window, legX, legY + fsS * 1.8f, 10, 3,
                 sf::Color(172, 98, 248));
-            renderer.drawText(window, fmt(sim.lat2, 0) + "d",
+            renderer.drawText(window, fmt(sim.lat2, 1) + "d",
                               legX + 13, legY + fsS * 1.2f,
                               (unsigned)fsS, sf::Color(172, 98, 248));
         }
