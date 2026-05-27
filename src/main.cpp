@@ -24,8 +24,9 @@ struct Layout
     // Левая панель: траектория маятника
     float trajX, trajY, trajW, trajH;
 
-    // Кнопки управления (под траекторией)
+    // Кнопки управления (и кнопки мгновенного перехода)
     float btnY, btnH, btnW;
+    float snapY;
 
     // Правая панель: три графика
     float gx, gy0, gw, gh;
@@ -52,12 +53,13 @@ static Layout calcLayout(sf::Vector2u winSize)
     L.btnH = std::max(30.f, L.H * 0.044f);
     L.btnY = L.H - L.bot - L.pad - L.btnH;
     L.btnW = (L.left - L.pad * 2.f) / 4.f - 2.f;
+    L.snapY = L.btnY - L.pad - L.btnH;
 
     // Траектория: от шапки до кнопок
     L.trajX = L.pad;
     L.trajY = L.top + L.pad;
     L.trajW = L.left - L.pad * 2.f;
-    L.trajH = L.btnY - L.trajY - L.pad;
+    L.trajH = L.snapY - L.trajY - L.pad;
 
     // Три графика справа: занимают всю правую часть
     L.gx = L.left + L.pad;
@@ -297,6 +299,7 @@ int main()
     // Прямоугольники кнопок — нужны для обработки кликов.
     // Заполняются при рисовании каждый кадр.
     sf::FloatRect btnPause, btnReset, btnSpeedDn, btnSpeedUp;
+    sf::FloatRect btnJump1h, btnJump6h, btnJump12h, btnJump24h;
 
     // Главный цикл программы
     while (window.isOpen())
@@ -341,7 +344,7 @@ int main()
                 if (btnReset.contains(pos))
                 {
                     controller.handleStop(sim);
-                    paused = false;
+                    paused = true;
                 }
 
                 if (btnSpeedDn.contains(pos))
@@ -349,6 +352,15 @@ int main()
 
                 if (btnSpeedUp.contains(pos))
                     sim.timeScale = increaseSpeed(sim.timeScale);
+
+                if (btnJump1h.contains(pos))
+                    sim.jumpToTime(3600.0);
+                if (btnJump6h.contains(pos))
+                    sim.jumpToTime(3600.0 * 6.0);
+                if (btnJump12h.contains(pos))
+                    sim.jumpToTime(3600.0 * 12.0);
+                if (btnJump24h.contains(pos))
+                    sim.jumpToTime(3600.0 * 24.0);
 
                 // Кнопка [P] Params в правом углу шапки
                 Layout Lc = calcLayout(window.getSize());
@@ -578,6 +590,38 @@ int main()
                                  bx + 3 * (bw + 2), by, bw, bh,
                                  sf::Color(50, 46, 18),
                                  sf::Color(225, 218, 130));
+        }
+
+        // Кнопки мгновенного перехода
+        {
+            float bx = L.trajX;
+            float by = L.snapY;
+            float bw = L.btnW;
+            float bh = L.btnH;
+
+            btnJump1h = drawBtn(window, renderer,
+                                "1h",
+                                bx, by, bw, bh,
+                                sf::Color(45, 95, 170),
+                                sf::Color(220, 230, 250));
+
+            btnJump6h = drawBtn(window, renderer,
+                                "6h",
+                                bx + bw + 2, by, bw, bh,
+                                sf::Color(45, 95, 170),
+                                sf::Color(220, 230, 250));
+
+            btnJump12h = drawBtn(window, renderer,
+                                 "12h",
+                                 bx + 2 * (bw + 2), by, bw, bh,
+                                 sf::Color(45, 95, 170),
+                                 sf::Color(220, 230, 250));
+
+            btnJump24h = drawBtn(window, renderer,
+                                 "24h",
+                                 bx + 3 * (bw + 2), by, bw, bh,
+                                 sf::Color(45, 95, 170),
+                                 sf::Color(220, 230, 250));
         }
 
         // Правая панель: три графика

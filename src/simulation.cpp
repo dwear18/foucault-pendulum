@@ -61,6 +61,64 @@ static void stepAndSave(Pendulum &p, PhysicsEngine &ph,
     }
 }
 
+static void appendAlpha(std::vector<double> &history, double alpha)
+{
+    history.push_back(alpha);
+    if (history.size() > MAX_PTS)
+        history.erase(history.begin());
+}
+
+// Быстро перейти на будущее состояние без анимации
+void Simulation::jumpToTime(double seconds, double step)
+{
+    if (seconds <= 0.0)
+        return;
+
+    // Используем малый интеграционный шаг для длинных прогонах,
+    // чтобы не терять энергию из-за численной диссипации.
+    double dtEstimate = std::min(step, this->dt);
+    int steps = static_cast<int>(std::ceil(seconds / dtEstimate));
+    int sampleRate = std::max(1, steps / 2500);
+    double left = seconds;
+
+    for (int i = 0; i < steps && left > 1e-12; ++i)
+    {
+        double dtStep = std::min(dtEstimate, left);
+        solver.step(pendulum, physics, dtStep);
+        if (showSecond)
+            solver2.step(pendulum2, physics2, dtStep);
+
+        time += dtStep;
+
+        if ((i % sampleRate) == 0 || dtStep == left)
+        {
+            historyX.push_back(pendulum.x);
+            historyY.push_back(pendulum.y);
+            if (showSecond)
+            {
+                historyX2.push_back(pendulum2.x);
+                historyY2.push_back(pendulum2.y);
+            }
+            appendAlpha(historyAlpha, getCurrentAlpha());
+        }
+
+        // Ограничим максимальный размер историй сразу, чтобы при больших прыжках
+        // не разрастаться слишком сильно.
+        if (historyX.size() > MAX_PTS)
+        {
+            historyX.erase(historyX.begin());
+            historyY.erase(historyY.begin());
+        }
+        if (showSecond && historyX2.size() > MAX_PTS)
+        {
+            historyX2.erase(historyX2.begin());
+            historyY2.erase(historyY2.begin());
+        }
+
+        left -= dtStep;
+    }
+}
+
 // Обновить симуляцию на один кадр
 void Simulation::update(double real_dt)
 {

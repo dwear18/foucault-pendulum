@@ -49,6 +49,9 @@ public:
     void update(double real_dt); // обновить на один кадр
     void stop();                 // остановить (сброс = start)
 
+    // Быстро перейти на будущее состояние без анимации
+    void jumpToTime(double seconds, double step = 0.01);
+
     // Получить текущий угол прецессии (рад)
     double getCurrentAlpha() const;
 
