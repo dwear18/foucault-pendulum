@@ -87,17 +87,17 @@ Controller::Controller()
 {
     // Формат: { label, unit, value, defaultValue, savedValue, minVal, maxVal, error, errorMsg, wasHovered }
     fields = {
-        {"Latitude A", "deg", "45.0000", "45.0000", "", -90, 90, false, "", false},
-        {"Latitude B", "deg", "60.0000", "60.0000", "", -90, 90, false, "", false},
-        {"Length L", "m", "2.5000", "2.5000", "", 0.01, 1000, false, "", false},
-        {"Mass m", "kg", "1.0000", "1.0000", "", 0.001, 1e6, false, "", false},
-        {"Gravity g", "m/s2", "9.8067", "9.8067", "", 0.01, 100, false, "", false},
+        {"Latitude A", "deg", "59.9000", "59.9000", "", -90, 90, false, "", false},
+        {"Latitude B", "deg", "48.9000", "48.9000", "", -90, 90, false, "", false},
+        {"Length L", "m", "98.0000", "98.0000", "", 0.01, 1000, false, "", false},
+        {"Mass m", "kg", "54.0000", "54.0000", "", 0.001, 1e6, false, "", false},
+        {"Gravity g", "m/s2", "9.8066", "9.8066", "", 0.01, 100, false, "", false},
         {"x0", "m", "0.1000", "0.1000", "", -10, 10, false, "", false},
         {"y0", "m", "0.0000", "0.0000", "", -10, 10, false, "", false},
         {"Vx0", "m/s", "0.0000", "0.0000", "", -50, 50, false, "", false},
         {"Vy0", "m/s", "0.0000", "0.0000", "", -50, 50, false, "", false},
         {"Step dt", "s", "0.0100", "0.0100", "", 1e-4, 1.0, false, "", false},
-        {"T_max", "s", "200.0", "200.0", "", 1, 1e6, false, "", false},
+        {"T_max", "s", "200000.0", "200000.0", "", 1, 1e6, false, "", false},
     };
     
     // Инициализируем savedValue для всех полей
